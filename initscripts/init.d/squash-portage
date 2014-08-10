@@ -1,0 +1,115 @@
+#!/sbin/runscript
+
+depend() {
+	need localmount
+}
+
+start() {
+	ebegin "Mounting read-only squashfs image"
+	for DIR in $SQFS_LOCATIONS; do
+		# basename breaks the DIR down to just the last field of the path
+		BASE_NAME=`basename "$DIR"`
+		# find list of squashfs file locations and get them mounted
+		SQFS_CUR="$SQFS_STORAGE"/"$BASE_NAME".sqfs
+		mount -rt squashfs -o loop,nodev,noexec "$SQFS_CUR" "$DIR"
+		# die gracefully if this fails. umount everything done to this point
+		if [ $? -ne 0 ]; then
+			eend "failed to mount: ""$SQFS_CUR"
+			for DIR in $SQFS_LOCATIONS; do
+				if [ `grep -c "$DIR"" " /etc/mtab` -ge 1 ]; then
+					umount -t squashfs "$DIR"
+				fi
+			done
+			exit 1
+		fi
+	done
+
+	ebegin "Mounting read-write layer over squashfs image"
+	if [ ! -d "$UNION_ROOT" ]; then
+		 mkdir -p "$UNION_ROOT"
+	fi
+
+	for DIR in $SQFS_LOCATIONS; do
+		BASE_NAME=`basename "$DIR"`
+
+		if [ ! -d "$UNION_ROOT"/"$BASE_NAME" ]; then
+			 mkdir -p "$UNION_ROOT"/"$BASE_NAME"
+		fi
+
+		# File permission setting of the overlay directory
+		DIR_PERMS_VAR=`echo "$BASE_NAME" | sed -e 's/\(.*\)/\U\1/' -e 's/$/_PERMS/'`
+		eval DIR_PERMS_VAR='$'$DIR_PERMS_VAR
+		if [ -n "$DIR_PERMS_VAR" ]; then
+			chmod "$DIR_PERMS_VAR" "$UNION_ROOT"/"$BASE_NAME"
+			if [ $? -ne 0 ]; then
+				ewarn "Failed to set overlay permissions for: ""$DIR"
+				ewarn "Check configuration file. Continuing with default permissions."
+			fi			
+		else
+			chmod "$DEFAULT_PERMS" "$UNION_ROOT"/"$BASE_NAME"
+		fi
+		# Do similar voodoo for owner:group checking
+		DIR_OWNER_VAR=`echo "$BASE_NAME" | sed -e 's/\(.*\)/\U\1/' -e 's/$/_OWNER/'`
+		eval DIR_OWNER_VAR='$'$DIR_OWNER_VAR
+		if [ -n "$DIR_OWNER_VAR" ]; then
+			chown "$DIR_OWNER_VAR" "$UNION_ROOT"/"$BASE_NAME"
+			if [ $? -ne 0 ]; then
+				ewarn "Failed to set overlay owner for: ""$DIR"
+				ewarn "Check configuration file. Continuing with default owner."
+			fi			
+		else
+			chown "$DEFAULT_OWNER" "$UNION_ROOT"/"$BASE_NAME"
+		fi
+
+		# Mount the overlay over the squashfs image
+		mount -t "$UNIONFS" -o nodev,dirs="$UNION_ROOT"/"$BASE_NAME"=rw:"$DIR"=ro none "$DIR"
+		# die gracefully if this errors. umount everything done to this point
+		if [ $? -ne 0 ]; then
+			eend "failed to mount: ""$UNION_ROOT"/"BASE_NAME"
+			for DIR in SQFS_LOCATIONS; do
+				if [ `grep -c "$DIR"" " /etc/mtab` -ge 1 ]; then
+					umount -t "$UNIONFS" "$DIR"
+					umount -t squashfs "$DIR"
+				fi
+			done
+			exit 1
+		fi
+	done
+	eend 0
+}
+
+stop() {
+	ebegin "Checking for changes to squashfs image: "
+	for DIR in $SQFS_LOCATIONS; do
+		BASE_NAME=`basename "$DIR"`
+
+		SQFS_CUR="$SQFS_STORAGE"/"$BASE_NAME".sqfs
+		SQFS_NEW="$SQFS_STORAGE"/"$BASE_NAME".sqfs.new
+		SQFS_OLD="$SQFS_STORAGE"/"$BASE_NAME".sqfs.old
+		# if anything is in the overlay directory, then something changed
+		if [ ! -z `ls -A "$UNION_ROOT"/"$BASE_NAME" | head -n 1` ]; then
+			einfo "  changes found in ""$UNION_ROOT"/""$BASE_NAME"; updating image"
+			mv -f "$SQFS_NEW" "$SQFS_OLD"
+			mksquashfs "$DIR" "$SQFS_NEW" -no-duplicates 2> /dev/null
+			if [ $? -eq 0 ]; then
+				ln -sf "$SQFS_NEW" "$SQFS_CUR"
+				rm -f "$SQFS_OLD"
+			# needs better error checking - probably an abort or retry
+			fi
+		else
+			einfo "  "$DIR" image current"
+		fi
+		eend 0
+
+	ebegin "Umounting read-write layer over "$DIR" squashfs image"
+		umount -t "$UNIONFS" "$DIR"
+		umount -t squashfs "$DIR"
+		rm -rf "$UNION_ROOT"/"$BASE_NAME"
+	eend 0
+	done
+}
+
+restart() {
+	stop
+	start
+}

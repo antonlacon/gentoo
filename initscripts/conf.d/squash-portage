@@ -1,0 +1,46 @@
+# /etc/conf.d/squash-portage
+
+source /etc/make.conf
+
+# SQFS_LOCATIONS is a list of paths to be compressed with SquashFS
+# space delimited
+
+SQFS_LOCATIONS="$PORTDIR /usr/src"
+
+# SQFS_STORAGE points to the directory where sqfs images are stored
+
+SQFS_STORAGE="/var/tmp/sqfs-images"
+
+# UNIONFS is the union file system to use while mounting the overlay
+
+UNIONFS="unionfs"
+
+# UNION_ROOT is the root directory of the union file tree to be used
+
+UNION_ROOT="/var/tmp/union-overlay"
+
+# Default permissions of the union overlay
+
+DEFAULT_PERMS="0755"
+
+# Default owner:group of the union overlay
+
+DEFAULT_OWNER="root"
+
+# Create variables in the following format to manage overlay's permissions:
+# BASE-NAME-OF-DIRECTORY_PERMS="####"
+# For example:
+# /usr/portage's base name is portage so PORTAGE_PERMS="0755"
+# NOTE: These settings are only used for files that are created in the overlay.
+# Original image's settings will be unchanged.
+
+#PORTAGE_PERMS="0755"
+
+# Create variables in the following format to manage overlay's owner:
+# BASE-NAME-OF-DIRECTORY_OWNER="####"
+# For example:
+# /usr/portage's base name is portage so PORTAGE_OWNER="portage"
+# NOTE: These settings are only used for files that are created in the overlay.
+# Original image's settings will be unchanged.
+
+#PORTAGE_OWNER="portage"
