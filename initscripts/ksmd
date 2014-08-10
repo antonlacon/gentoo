@@ -21,7 +21,9 @@ stop() {
 
 status() {
 	local SYSTEM_PAGESIZE=$( getconf PAGESIZE )
-	echo "Shared KSM memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_sharing) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
-	echo "Unshared KSM memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_unshared) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+
+	echo "Shared KSM memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_shared) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+	echo "Saved memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_sharing) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+	echo "Unshared memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_unshared) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
 	echo "Unshareable memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_volatile) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
 }
