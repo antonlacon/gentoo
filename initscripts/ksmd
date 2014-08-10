@@ -1,0 +1,27 @@
+#!/sbin/runscript
+#
+# Copyright 2014 Ian Leonard <antonlacon@gmail.com>
+#
+
+SYSFS_KSM_DIR="/sys/kernel/mm/ksm"
+
+depend() {
+	need sysfs localmount
+}
+
+start() {
+	ebegin "ksmd starting..."
+	echo 1 > "${SYSFS_KSM_DIR}"/run
+}
+
+stop() {
+	eend "ksmd stopping and unmerging shared pages..."
+	echo 2 > "${SYSFS_KSM_DIR}"/run
+}
+
+status() {
+	local SYSTEM_PAGESIZE=$( getconf PAGESIZE )
+	echo "Shared KSM memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_sharing) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+	echo "Unshared KSM memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_unshared) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+	echo "Unshareable memory: "$(( $(cat "${SYSFS_KSM_DIR}"/pages_volatile) * ${SYSTEM_PAGESIZE} / 1024 / 1024 ))" MiB"
+}
