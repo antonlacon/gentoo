@@ -20,6 +20,9 @@
 # squashfs-portage.sh creates and timestamps a squashfs image of the portage tree.
 # It is intended for cron jobs or post emerge --sync calling.
 
+# FIXME: the script should check which repository was sync'd before building image - only build main tree.
+# See Example.
+
 # die(msg, code) - exit with message and code
 die() {
 	echo "$1" # provide death report
@@ -69,9 +72,8 @@ SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
 mkdir -p "${SQUASHFS_REPO}" || die "Abort: Failed to make SQUASHFS_REPO."
 
 # compare timestamp of portage to squashfs to see if new image should be built
-# timestamp.chk does not exist if synced with emerge-webrsync
-# FIXME: make this an AND if for both timestamps existing
-if [ -e "/usr/portage/metadata/timestamp.chk" ]; then
+# timestamp.chk does not exist if tree is updated with emerge-webrsync
+if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portage-timestamp.chk" ]; then
 	PORTAGE_TIMESTAMP=$( cat "/usr/portage/metadata/timestamp.chk" )
 
 	PORTAGE_YEAR=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 4 )
@@ -79,32 +81,30 @@ if [ -e "/usr/portage/metadata/timestamp.chk" ]; then
 	PORTAGE_DAY=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 2 )
 	PORTAGE_HOUR=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 1 )
 	PORTAGE_MINUTE=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
-	#PORTAGE_SECOND=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 3 )
-fi
 
-if [ -e "$SQUASHFS_REPO""/portage-timestamp.chk" ]; then
 	SQUASHFS_TIMESTAMP=$( cat "$SQUASHFS_REPO""/portage-timestamp.chk" )
 
 	SQUASHFS_YEAR=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 4 )
 	SQUASHFS_MONTH=$( month_to_int $( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 3 ) )
 	SQUASHFS_DAY=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 2 )
 	SQUASHFS_HOUR=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 1 )
-	SQUASHFS_HOUR=$((SQUASHFS_HOUR+=7)) # adjust this for taking into account the timezone. hardcode til then for PDT.
+	# FIXME adjust this for taking into account the timezone. hardcode adjustment until then for PDT.
+	# FIXME also adjust for when adding to hours shifts day + month
+	SQUASHFS_HOUR=$((SQUASHFS_HOUR+=7))
 	SQUASHFS_MINUTE=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
-#	SQUASHFS_SECOND=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 3 )
 
-# rewrite this to nest the if's instead of being sequential testing over n over
-# FIXME use die()
+# Timestamp comparison
+# FIXME rewrite this to nest the if's instead of being sequential testing over n over
 	if [[ "$SQUASHFS_YEAR" -gt "$PORTAGE_YEAR" ]]; then
-		echo "abort: squashfs image newer" && exit 1
-	elif [[ "$SQUASHFS_MONTH" -gt "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_YEAR" -eq "$PORTAGE_YEAR" ]]; then
-		echo "abort: squashfs image newer" && exit 1
+		die "Abort: Existing squashfs image is newer."
+	elif [[ "$SQUASHFS_YEAR" -eq "$PORTAGE_YEAR" ]] && [[ "$SQUASHFS_MONTH" -gt "$PORTAGE_MONTH" ]]; then
+		die "Abort: Existing squashfs image is newer."
 	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -gt "$PORTAGE_DAY" ]]; then
-		echo "abort: squashfs image newer" && exit 1
+		die "Abort: Existing squashfs image is newer."
 	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -eq "$PORTAGE_DAY" ]] && [[ "$SQUASHFS_HOUR" -gt "$PORTAGE_HOUR" ]]; then
-		echo "abort: squashfs image newer" && exit 1
+		die "Abort: Existing squashfs image is newer."
 	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -eq "$PORTAGE_DAY" ]] && [[ "$SQUASHFS_HOUR" -eq "$PORTAGE_HOUR" ]] && [[ "$SQUASHFS_MINUTE" -gt "$PORTAGE_MINUTE" ]]; then
-		echo "abort: squashfs image newer" && exit 1
+		die "Abort: Existing squashfs image is newer."
 	fi
 fi
 
