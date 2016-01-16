@@ -1,5 +1,5 @@
 #!/bin/bash
-# squashfs-portage.sh version 20160104
+# squashfs-portage.sh version 20160115
 #
 # Copyright 2014-2016: Ian Leonard <antonlacon@gmail.com
 #
@@ -19,9 +19,6 @@
 #
 # squashfs-portage.sh creates and timestamps a squashfs image of the portage tree.
 # It is intended for cron jobs or post emerge --sync calling.
-
-# FIXME: the script should check which repository was sync'd before building image - only build main tree.
-# See Example.
 
 # die(msg, code) - exit with message and code
 die() {
@@ -66,7 +63,18 @@ month_to_int() {
 	echo "$MONTH"
 }
 
+# script variables
 SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
+
+# portage variables
+REPOSITORY_NAME=${1}
+#SYNC_URI=${2}
+#REPOSITORY_PATH=${3}
+
+# Only want to do work on Gentoo's portage tree
+if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
+	die "Non-Gentoo tree sync." "0"
+fi
 
 # setup
 mkdir -p "${SQUASHFS_REPO}" || die "Abort: Failed to make SQUASHFS_REPO."
