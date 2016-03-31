@@ -96,9 +96,6 @@ if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portag
 	SQUASHFS_MONTH=$( month_to_int $( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 3 ) )
 	SQUASHFS_DAY=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 2 )
 	SQUASHFS_HOUR=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 1 )
-	# FIXME adjust this for taking into account the timezone. hardcode adjustment until then for PDT.
-	# FIXME also adjust for when adding to hours shifts day + month
-	SQUASHFS_HOUR=$((SQUASHFS_HOUR+=7))
 	SQUASHFS_MINUTE=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
 
 # Timestamp comparison
@@ -125,6 +122,6 @@ if [ -e "${SQUASHFS_REPO}"/portage.sqfs ]; then
 fi
 
 mv "${SQUASHFS_REPO}"/portage.sqfs.new "${SQUASHFS_REPO}"/portage.sqfs || die "Abort: Failed to substitute portage.sqfs files." "1"
-date +%a\,\ %d\ %b\ %Y\ %T\ %z > "${SQUASHFS_REPO}"/portage-timestamp.chk || die "Abort: Failed to create timestamp." "1"
+date -u +%a\,\ %d\ %b\ %Y\ %T\ %z > "${SQUASHFS_REPO}"/portage-timestamp.chk || die "Abort: Failed to create timestamp." "1"
 
 exit 0
