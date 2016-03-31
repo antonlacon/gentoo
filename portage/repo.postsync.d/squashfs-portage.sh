@@ -73,7 +73,7 @@ REPOSITORY_NAME=${1}
 
 # Only want to do work on Gentoo's portage tree
 if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
-	die "Non-Gentoo tree sync." "0"
+	die "Exiting: Non-Gentoo tree sync." "0"
 fi
 
 # setup
@@ -99,17 +99,14 @@ if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portag
 	SQUASHFS_MINUTE=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
 
 # Timestamp comparison
-# FIXME rewrite this to nest the if's instead of being sequential testing over n over
-	if [[ "$SQUASHFS_YEAR" -gt "$PORTAGE_YEAR" ]]; then
-		die "Abort: Existing squashfs image is newer."
-	elif [[ "$SQUASHFS_YEAR" -eq "$PORTAGE_YEAR" ]] && [[ "$SQUASHFS_MONTH" -gt "$PORTAGE_MONTH" ]]; then
-		die "Abort: Existing squashfs image is newer."
-	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -gt "$PORTAGE_DAY" ]]; then
-		die "Abort: Existing squashfs image is newer."
-	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -eq "$PORTAGE_DAY" ]] && [[ "$SQUASHFS_HOUR" -gt "$PORTAGE_HOUR" ]]; then
-		die "Abort: Existing squashfs image is newer."
-	elif [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -eq "$PORTAGE_DAY" ]] && [[ "$SQUASHFS_HOUR" -eq "$PORTAGE_HOUR" ]] && [[ "$SQUASHFS_MINUTE" -gt "$PORTAGE_MINUTE" ]]; then
-		die "Abort: Existing squashfs image is newer."
+# Bash if test comparisons are performed left to right with equal weighting between && and || operators
+# Assumes each test piece does not need to be repeated in full as the test would fail in earlier groupings
+	if [[ "$SQUASHFS_YEAR" -gt "$PORTAGE_YEAR" ]] || \
+	   [[ "$SQUASHFS_YEAR" -eq "$PORTAGE_YEAR" ]] && [[ "$SQUASHFS_MONTH" -gt "$PORTAGE_MONTH" ]] || \
+	   [[ "$SQUASHFS_MONTH" -eq "$PORTAGE_MONTH" ]] && [[ "$SQUASHFS_DAY" -gt "$PORTAGE_DAY" ]] || \
+	   [[ "$SQUASHFS_DAY" -eq "$PORTAGE_DAY" ]] && [[ "$SQUASHFS_HOUR" -gt "$PORTAGE_HOUR" ]] || \
+	   [[ "$SQUASHFS_HOUR" -eq "$PORTAGE_HOUR" ]] && [[ "$SQUASHFS_MINUTE" -gt "$PORTAGE_MINUTE" ]]; then
+		die "Exiting: Squashfs image is current or newer; nothing to do." "0"
 	fi
 fi
 
