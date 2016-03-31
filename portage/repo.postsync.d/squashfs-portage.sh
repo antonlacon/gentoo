@@ -1,5 +1,5 @@
 #!/bin/bash
-# squashfs-portage.sh version 20160115
+# squashfs-portage.sh version 20160331
 #
 # Copyright 2014-2016: Ian Leonard <antonlacon@gmail.com
 #
@@ -67,9 +67,9 @@ month_to_int() {
 SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
 
 # portage variables
-REPOSITORY_NAME=${1}
-#SYNC_URI=${2}
-#REPOSITORY_PATH=${3}
+REPOSITORY_NAME="${1}"
+#SYNC_URI="${2}"
+#REPOSITORY_PATH="${3}"
 
 # Only want to do work on Gentoo's portage tree
 if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
