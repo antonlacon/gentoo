@@ -1,22 +1,24 @@
 #!/sbin/runscript
 #
-# Copyright 2014 Ian Leonard <antonlacon@gmail.com>
+# Copyright 2014-2016 Ian Leonard <antonlacon@gmail.com>
 #
 
 SYSFS_KSM_DIR="/sys/kernel/mm/ksm"
 
 depend() {
-	need sysfs localmount
+	need sysfs
 }
 
 start() {
 	ebegin "ksmd starting..."
 	echo 1 > "${SYSFS_KSM_DIR}"/run
+	eend $?
 }
 
 stop() {
-	eend "ksmd stopping and unmerging shared pages..."
+	ebegin "ksmd stopping and unmerging shared pages..."
 	echo 2 > "${SYSFS_KSM_DIR}"/run
+	eend $?
 }
 
 status() {
