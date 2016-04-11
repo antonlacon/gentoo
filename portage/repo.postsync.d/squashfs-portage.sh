@@ -81,7 +81,7 @@ mkdir -p "${SQUASHFS_REPO}" || die "Abort: Failed to make SQUASHFS_REPO."
 # compare timestamp of portage to squashfs to see if new image should be built
 # timestamp.chk does not exist if tree is updated with emerge-webrsync
 if [ -e "${REPOSITORY_PATH}/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO/${REPOSITORY_NAME}-timestamp.chk" ]; then
-	PORTAGE_TIMESTAMP=$( cat "${REPOSITORY_PATH}/metadata/timestamp.chk" )
+	PORTAGE_TIMESTAMP=$( <"${REPOSITORY_PATH}/metadata/timestamp.chk" )
 
 	PORTAGE_YEAR=$( echo "${PORTAGE_TIMESTAMP}" | cut -d ' ' -f 4 )
 	PORTAGE_MONTH=$( month_to_int $( echo "${PORTAGE_TIMESTAMP}" | cut -d ' ' -f 3 ) )
@@ -89,7 +89,7 @@ if [ -e "${REPOSITORY_PATH}/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO/${
 	PORTAGE_HOUR=$( echo "${PORTAGE_TIMESTAMP}" | cut -d ' ' -f 5 | cut -d ':' -f 1 )
 	PORTAGE_MINUTE=$( echo "${PORTAGE_TIMESTAMP}" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
 
-	SQUASHFS_TIMESTAMP=$( cat "${SQUASHFS_REPO}/${REPOSITORY_NAME}-timestamp.chk" )
+	SQUASHFS_TIMESTAMP=$( <"${SQUASHFS_REPO}/${REPOSITORY_NAME}-timestamp.chk" )
 
 	SQUASHFS_YEAR=$( echo "${SQUASHFS_TIMESTAMP}" | cut -d ' ' -f 4 )
 	SQUASHFS_MONTH=$( month_to_int $( echo "${SQUASHFS_TIMESTAMP}" | cut -d ' ' -f 3 ) )
