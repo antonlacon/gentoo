@@ -20,6 +20,13 @@
 # squashfs-portage.sh creates and timestamps a squashfs image of the portage tree.
 # It is intended for cron jobs or post emerge --sync calling.
 
+# script variables
+SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
+
+# portage's repo.postsync.d variables
+REPOSITORY_NAME="${1}"
+REPOSITORY_PATH="${3}"
+
 # die(msg, code) - exit with message and code
 die() {
 	echo "$1" # provide death report
@@ -62,14 +69,6 @@ month_to_int() {
 	fi
 	echo "$MONTH"
 }
-
-# script variables
-SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
-
-# portage variables
-REPOSITORY_NAME="${1}"
-#SYNC_URI="${2}"
-REPOSITORY_PATH="${3}"
 
 # Only want to do work on Gentoo's portage tree
 if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
