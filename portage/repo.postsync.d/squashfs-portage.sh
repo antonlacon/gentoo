@@ -1,5 +1,5 @@
 #!/bin/bash
-# squashfs-portage.sh version 20160410
+# squashfs-portage.sh version 20160411
 #
 # Copyright 2014-2016: Ian Leonard <antonlacon@gmail.com
 #
@@ -80,7 +80,7 @@ mkdir -p "${SQUASHFS_REPO}" || die "Abort: Failed to make SQUASHFS_REPO."
 
 # compare timestamp of portage to squashfs to see if new image should be built
 # timestamp.chk does not exist if tree is updated with emerge-webrsync
-if [ -e "${REPOSITORY_PATH}/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO/${REPOSITORY_NAME}-timestamp.chk" ]; then
+if [ -e "${REPOSITORY_PATH}/metadata/timestamp.chk" ] && [ -e "${SQUASHFS_REPO}/${REPOSITORY_NAME}-timestamp.chk" ]; then
 	PORTAGE_TIMESTAMP=$( <"${REPOSITORY_PATH}/metadata/timestamp.chk" )
 
 	PORTAGE_YEAR=$( echo "${PORTAGE_TIMESTAMP}" | cut -d ' ' -f 4 )
