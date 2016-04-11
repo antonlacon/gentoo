@@ -1,5 +1,5 @@
 #!/bin/bash
-# squashfs-portage.sh version 20160331
+# squashfs-portage.sh version 20160410
 #
 # Copyright 2014-2016: Ian Leonard <antonlacon@gmail.com
 #
@@ -69,7 +69,7 @@ SQUASHFS_REPO="/mnt/services/gentoo/squashfs"
 # portage variables
 REPOSITORY_NAME="${1}"
 #SYNC_URI="${2}"
-#REPOSITORY_PATH="${3}"
+REPOSITORY_PATH="${3}"
 
 # Only want to do work on Gentoo's portage tree
 if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
@@ -81,8 +81,8 @@ mkdir -p "${SQUASHFS_REPO}" || die "Abort: Failed to make SQUASHFS_REPO."
 
 # compare timestamp of portage to squashfs to see if new image should be built
 # timestamp.chk does not exist if tree is updated with emerge-webrsync
-if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portage-timestamp.chk" ]; then
-	PORTAGE_TIMESTAMP=$( cat "/usr/portage/metadata/timestamp.chk" )
+if [ -e "${REPOSITORY_PATH}""/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/""$REPOSITORY_NAME""-timestamp.chk" ]; then
+	PORTAGE_TIMESTAMP=$( cat "${REPOSITORY_PATH}""/metadata/timestamp.chk" )
 
 	PORTAGE_YEAR=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 4 )
 	PORTAGE_MONTH=$( month_to_int $( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 3 ) )
@@ -90,7 +90,7 @@ if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portag
 	PORTAGE_HOUR=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 1 )
 	PORTAGE_MINUTE=$( echo "$PORTAGE_TIMESTAMP" | cut -d ' ' -f 5 | cut -d ':' -f 2 )
 
-	SQUASHFS_TIMESTAMP=$( cat "$SQUASHFS_REPO""/portage-timestamp.chk" )
+	SQUASHFS_TIMESTAMP=$( cat "$SQUASHFS_REPO""/""$REPOSITORY_NAME""-timestamp.chk" )
 
 	SQUASHFS_YEAR=$( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 4 )
 	SQUASHFS_MONTH=$( month_to_int $( echo "$SQUASHFS_TIMESTAMP" | cut -d ' ' -f 3 ) )
@@ -111,14 +111,14 @@ if [ -e "/usr/portage/metadata/timestamp.chk" ] && [ -e "$SQUASHFS_REPO""/portag
 fi
 
 # build squashfs image
-mksquashfs /usr/portage "${SQUASHFS_REPO}"/portage.sqfs.new -comp xz || die "Abort: mksquashfs failed." "1"
+mksquashfs "${REPOSITORY_PATH}" "${SQUASHFS_REPO}"/"$REPOSITORY_NAME".sqfs.new -comp xz || die "Abort: mksquashfs failed." "1"
 
 # put squashfs image into circulation
-if [ -e "${SQUASHFS_REPO}"/portage.sqfs ]; then
-	rm "${SQUASHFS_REPO}"/portage.sqfs || die "Abort: Failed to delete prior portage.sqfs"
+if [ -e "${SQUASHFS_REPO}"/"$REPOSITORY_NAME".sqfs ]; then
+	rm "${SQUASHFS_REPO}"/"$REPOSITORY_NAME".sqfs || die "Abort: Failed to delete prior squashfs image"
 fi
 
-mv "${SQUASHFS_REPO}"/portage.sqfs.new "${SQUASHFS_REPO}"/portage.sqfs || die "Abort: Failed to substitute portage.sqfs files." "1"
-date -u +%a\,\ %d\ %b\ %Y\ %T\ %z > "${SQUASHFS_REPO}"/portage-timestamp.chk || die "Abort: Failed to create timestamp." "1"
+mv "${SQUASHFS_REPO}"/"$REPOSITORY_NAME".sqfs.new "${SQUASHFS_REPO}"/"$REPOSITORY_NAME".sqfs || die "Abort: Failed to substitute squashfs files." "1"
+date -u +%a\,\ %d\ %b\ %Y\ %T\ %z > "${SQUASHFS_REPO}"/"$REPOSITORY_NAME"-timestamp.chk || die "Abort: Failed to create timestamp." "1"
 
 exit 0
