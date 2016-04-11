@@ -73,7 +73,7 @@ REPOSITORY_NAME="${1}"
 
 # Only want to do work on Gentoo's portage tree
 if [ "${REPOSITORY_NAME}" != "gentoo" ]; then
-	die "Exiting: Non-Gentoo tree sync." "0"
+	exit 0
 fi
 
 # setup
