@@ -100,11 +100,12 @@ if [ -e "${REPOSITORY_PATH}/metadata/timestamp.chk" ] && [ -e "${SQUASHFS_REPO}/
 # Timestamp comparison
 # Bash if test comparisons are performed left to right with equal weighting between && and || operators
 # Assumes each test piece does not need to be repeated in full as the test would fail in earlier groupings
+# Bash treats numbers with leading zeroes as octal; strip leading zero prior to evaluating
 	if [[ "${SQUASHFS_YEAR}" -gt "${PORTAGE_YEAR}" ]] || \
 	   [[ "${SQUASHFS_YEAR}" -eq "${PORTAGE_YEAR}" ]] && [[ "${SQUASHFS_MONTH}" -gt "${PORTAGE_MONTH}" ]] || \
-	   [[ "${SQUASHFS_MONTH}" -eq "${PORTAGE_MONTH}" ]] && [[ "${SQUASHFS_DAY}" -gt "${PORTAGE_DAY}" ]] || \
-	   [[ "${SQUASHFS_DAY}" -eq "${PORTAGE_DAY}" ]] && [[ "${SQUASHFS_HOUR}" -gt "${PORTAGE_HOUR}" ]] || \
-	   [[ "${SQUASHFS_HOUR}" -eq "${PORTAGE_HOUR}" ]] && [[ "${SQUASHFS_MINUTE}" -gt "${PORTAGE_MINUTE}" ]]; then
+	   [[ "${SQUASHFS_MONTH}" -eq "${PORTAGE_MONTH}" ]] && [[ "${SQUASHFS_DAY#0}" -gt "${PORTAGE_DAY#0}" ]] || \
+	   [[ "${SQUASHFS_DAY#0}" -eq "${PORTAGE_DAY#0}" ]] && [[ "${SQUASHFS_HOUR#0}" -gt "${PORTAGE_HOUR#0}" ]] || \
+	   [[ "${SQUASHFS_HOUR#0}" -eq "${PORTAGE_HOUR#0}" ]] && [[ "${SQUASHFS_MINUTE#0}" -gt "${PORTAGE_MINUTE#0}" ]]; then
 		die "Exiting: Squashfs image is current or newer; nothing to do." "0"
 	fi
 fi
