@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 depend() {
 	need localmount
@@ -44,7 +44,7 @@ start() {
 			if [ $? -ne 0 ]; then
 				ewarn "Failed to set overlay permissions for: ""$DIR"
 				ewarn "Check configuration file. Continuing with default permissions."
-			fi			
+			fi
 		else
 			chmod "$DEFAULT_PERMS" "$UNION_ROOT"/"$BASE_NAME"
 		fi
@@ -56,7 +56,7 @@ start() {
 			if [ $? -ne 0 ]; then
 				ewarn "Failed to set overlay owner for: ""$DIR"
 				ewarn "Check configuration file. Continuing with default owner."
-			fi			
+			fi
 		else
 			chown "$DEFAULT_OWNER" "$UNION_ROOT"/"$BASE_NAME"
 		fi
