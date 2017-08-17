@@ -1,0 +1,5 @@
+# directory path to Portage files
+portage_dir="/usr/portage"
+
+# directory path for linux kernel
+kernel_dir="/usr/src/linux-version-gentoo"
